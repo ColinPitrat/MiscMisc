@@ -38,6 +38,12 @@ def parse_table(name, tag):
         i = int(cell.string, 16)
       if cell.name != "td":
         continue
+      try:
+        if 'un' in cell['class']:
+          # "Illegal" instruction, skip
+          continue
+      except KeyError:
+        pass
       if cell.string:
         print("%s -> %s" % (cell.string, opcode(name, i*16+j)))
       j += 1
