@@ -15,13 +15,15 @@ def prefix(name):
   if name == "IX bit instructions (DDCB)":
     return "0xddcb"
   if name == "IY instructions (FD)":
-    return "0xdd"
+    return "0xfd"
   if name == "IY bit instructions (FDCB)":
-    return "0xddcb"
+    return "0xfdcb"
   raise RuntimeError("Unknown table '%s'" % name)
 
 def opcode(name, val):
-    return prefix(name) + hex(val)[2:]
+    padding = ""
+    if val < 16: padding = "0";
+    return prefix(name) + padding + hex(val)[2:]
 
 def parse_table(name, tag):
   first_row = True
