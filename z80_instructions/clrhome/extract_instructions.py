@@ -33,13 +33,14 @@ def parse_table(name, tag):
     if first_row:
       first_row = False
       continue
-    j = 0
+    j = -1
     i = -1
     for cell in row.children:
       if cell.name == "th":
         i = int(cell.string, 16)
       if cell.name != "td":
         continue
+      j += 1
       try:
         if 'un' in cell['class']:
           # "Illegal" instruction, skip
@@ -48,7 +49,6 @@ def parse_table(name, tag):
         pass
       if cell.string:
         print("%s -> %s" % (cell.string, opcode(name, i*16+j)))
-      j += 1
 
 with open("index.html") as f:
     soup = BeautifulSoup(f, 'html.parser')
