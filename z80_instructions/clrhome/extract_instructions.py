@@ -26,6 +26,7 @@ def opcode(name, val):
     return prefix(name) + padding + hex(val)[2:]
 
 def parse_table(name, tag):
+  result = {}
   first_row = True
   for row in tag.children:
     if row.name != "tr":
@@ -41,21 +42,42 @@ def parse_table(name, tag):
       if cell.name != "td":
         continue
       j += 1
+      documented = True
       try:
         if 'un' in cell['class']:
-          # "Illegal" instruction, skip
-          continue
+          documented = False
       except KeyError:
         pass
       if cell.string:
-        print("%s -> %s" % (cell.string, opcode(name, i*16+j)))
+        if cell.string not in result or (documented and not result[cell.string][1]):
+            result[cell.string] = (opcode(name, i*16+j), documented)
+        #print("%s -> %s" % (cell.string, opcode(name, i*16+j)))
+  return result
+
+def merge_instructions(dict1, dict2):
+    """Merge two dicts containing instruction->(opcode,type) mapping.
+
+    In case of duplicate instructions:
+     - Documented instructions are preferred to documented ones.
+     - Instructions from dict 1 are preferred to instructions from dict 2
+    """
+    for k in dict2:
+        if k in dict1:
+            if not dict1[k][1] and dict2[k][1]:
+                dict1[k] = dict2[k]
+        else:
+            dict1[k] = dict2[k]
+    return dict1
 
 with open("index.html") as f:
     soup = BeautifulSoup(f, 'html.parser')
     table_name = ""
+    instruction_to_opcode = {}
     for tag in soup.descendants:
       if tag.name == 'h3':
         #print(tag.string)
         table_name = tag.string
       if tag.name == 'table':
-        parse_table(table_name, tag)
+        instruction_to_opcode = merge_instructions(instruction_to_opcode, parse_table(table_name, tag))
+    for instr, code in instruction_to_opcode.items():
+      print("%s -> %s" % (instr, code[0]))
